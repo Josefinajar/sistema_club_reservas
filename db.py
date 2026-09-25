@@ -1,11 +1,6 @@
 """
 Conexión a MySQL.
 
->>> PROBABLEMENTE SE REEMPLACE POR LA DEL GRUPO <<<
-Si tus compañeros ya tienen su propia forma de conectarse, borrás este archivo
-y en reservas/servicio.py cambiás el import de obtener_conexion por el de ellos.
-
-Se abre una conexión por cada request y se cierra al terminar.
 """
 import pymysql
 import pymysql.cursors
