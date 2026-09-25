@@ -2,7 +2,6 @@
 Paginación con _limit / _offset y enlaces HATEOAS (_first, _prev, _next, _last).
 
 >>> LA USAN TODOS LOS LISTADOS (canchas, socios, reservas) <<<
-Si un compañero ya hizo la suya, conviene quedarse con UNA sola versión.
 """
 from urllib.parse import urlencode
 
