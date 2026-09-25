@@ -2,8 +2,7 @@
 Punto de entrada de la aplicación.
 
 >>> ESTE ARCHIVO ES PROVISORIO <<<
-Seguramente el grupo tenga su propio app.py. Lo único que tenés que llevar
-al de ellos son las dos líneas marcadas con "RESERVAS".
+Seguramente llevar al de ellos son las dos líneas marcadas con "RESERVAS".
 """
 from flask import Flask, jsonify
 from werkzeug.exceptions import HTTPException
