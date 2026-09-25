@@ -1,0 +1,190 @@
+# Parte de RESERVAS del contrato. Estos bloques se pegan dentro del swagger.yaml del grupo:
+#   - lo de "paths" va dentro de su "paths:"
+#   - lo de "components" va dentro de su "components:" (si ya tienen Error o Links, se usa uno solo)
+openapi: 3.0.3
+info:
+  title: Club Deportivo Encuentro - Reservas
+  version: 1.0.0
+
+paths:
+  /reservas:
+    get:
+      tags: [Reservas]
+      summary: Listar reservas con filtros y paginación
+      parameters:
+        - {name: id_cancha, in: query, schema: {type: integer, minimum: 1}}
+        - {name: id_socio, in: query, schema: {type: integer, minimum: 1}}
+        - {name: estado, in: query, schema: {$ref: '#/components/schemas/EstadoReserva'}}
+        - name: fecha_desde
+          in: query
+          description: Día de uso de la cancha, incluido
+          schema: {type: string, format: date, example: '2026-10-01'}
+        - name: fecha_hasta
+          in: query
+          description: Día de uso de la cancha, incluido. Debe ser >= fecha_desde
+          schema: {type: string, format: date, example: '2026-10-31'}
+        - {name: _limit, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 10}}
+        - {name: _offset, in: query, schema: {type: integer, minimum: 0, default: 0}}
+      responses:
+        '200':
+          description: Página de reservas ordenada por id ascendente
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ListaReservas'}
+        '400': {$ref: '#/components/responses/SolicitudInvalida'}
+
+    post:
+      tags: [Reservas]
+      summary: Crear una reserva
+      description: >
+        Verifica que el socio y la cancha existan y estén activos, que el horario sea válido
+        y que no haya superposición con reservas confirmadas de la cancha ni del socio.
+        Se crea en estado confirmada, guardando la tarifa vigente y el total calculado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/NuevaReserva'}
+      responses:
+        '201':
+          description: Reserva creada
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Reserva'}
+        '400': {$ref: '#/components/responses/SolicitudInvalida'}
+        '404': {$ref: '#/components/responses/NoEncontrado'}
+        '409':
+          description: Socio o cancha inactivos, o el horario se superpone con otra reserva confirmada
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+
+  /reservas/{id}:
+    get:
+      tags: [Reservas]
+      summary: Obtener una reserva
+      parameters: [{$ref: '#/components/parameters/IdReserva'}]
+      responses:
+        '200':
+          description: La reserva, con estado, tarifa histórica y total
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Reserva'}
+        '404': {$ref: '#/components/responses/NoEncontrado'}
+
+  /reservas/{id}/estado:
+    put:
+      tags: [Reservas]
+      summary: Cambiar el estado de una reserva
+      description: >
+        confirmada → cancelada solo si todavía no empezó.
+        confirmada → finalizada solo si ya terminó.
+        Una reserva cancelada o finalizada no cambia más.
+        Pedir el estado que ya tiene devuelve 200 sin modificarla.
+      parameters: [{$ref: '#/components/parameters/IdReserva'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [estado]
+              properties:
+                estado: {$ref: '#/components/schemas/EstadoReserva'}
+            example: {estado: cancelada}
+      responses:
+        '200':
+          description: Reserva con su estado actual
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Reserva'}
+        '400': {$ref: '#/components/responses/SolicitudInvalida'}
+        '404': {$ref: '#/components/responses/NoEncontrado'}
+        '409':
+          description: Transición no permitida o fuera del momento permitido
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+
+components:
+  parameters:
+    IdReserva:
+      name: id
+      in: path
+      required: true
+      schema: {type: integer, minimum: 1}
+
+  schemas:
+    EstadoReserva:
+      type: string
+      enum: [confirmada, cancelada, finalizada]
+
+    FechaHora:
+      type: string
+      pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}-03:00$'
+      example: '2026-10-15T18:00:00.000000-03:00'
+
+    NuevaReserva:
+      type: object
+      additionalProperties: false
+      required: [id_socio, id_cancha, fecha_hora_inicio, fecha_hora_fin]
+      properties:
+        id_socio: {type: integer, minimum: 1, example: 1}
+        id_cancha: {type: integer, minimum: 1, example: 2}
+        fecha_hora_inicio: {$ref: '#/components/schemas/FechaHora'}
+        fecha_hora_fin: {$ref: '#/components/schemas/FechaHora'}
+
+    Reserva:
+      type: object
+      properties:
+        id: {type: integer, example: 1}
+        id_socio: {type: integer, example: 1}
+        id_cancha: {type: integer, example: 2}
+        fecha_hora_inicio: {$ref: '#/components/schemas/FechaHora'}
+        fecha_hora_fin: {$ref: '#/components/schemas/FechaHora'}
+        estado: {$ref: '#/components/schemas/EstadoReserva'}
+        tarifa_historica:
+          type: integer
+          description: Tarifa por hora en centavos al momento de reservar
+          example: 1000000
+        total:
+          type: integer
+          description: Horas × tarifa_historica, en centavos
+          example: 2000000
+
+    ListaReservas:
+      type: object
+      properties:
+        reservas:
+          type: array
+          items: {$ref: '#/components/schemas/Reserva'}
+        _limit: {type: integer, example: 10}
+        _offset: {type: integer, example: 0}
+        _total: {type: integer, example: 1}
+        _links: {$ref: '#/components/schemas/Links'}
+
+    Links:
+      type: object
+      properties:
+        _first: {type: string}
+        _prev: {type: string, nullable: true}
+        _next: {type: string, nullable: true}
+        _last: {type: string}
+
+    Error:
+      type: object
+      properties:
+        error: {type: string, example: La cancha ya tiene una reserva confirmada en ese horario}
+
+  responses:
+    SolicitudInvalida:
+      description: Datos, campos o parámetros inválidos
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    NoEncontrado:
+      description: La reserva, el socio o la cancha no existen
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
