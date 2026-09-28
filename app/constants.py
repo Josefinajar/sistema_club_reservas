@@ -8,6 +8,16 @@ BASE_URL = '/api'
 
 # Reglas de dominio
 MIN_ID = 1
+HORA_APERTURA = 8
+HORA_CIERRE = 23
+DURACION_MIN_HORAS = 1
+DURACION_MAX_HORAS = 3
+
+# Paginacion
+LIMIT_DEFAULT = 10
+LIMIT_MIN = 1
+LIMIT_MAX = 100
+OFFSET_DEFAULT = 0
 
 # Configuracion de la base de datos MySQL (levantada via docker-compose)
 DB_HOST     = os.getenv('DB_HOST', 'localhost')
@@ -20,6 +30,7 @@ DB_URL      = f'mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_POR
 # Codigos de error genericos
 ERROR_CODE_INVALID_BODY      = 'invalid.body'
 ERROR_CODE_INVALID_MIN_VALUE = 'invalid.min.value'
+ERROR_CODE_CONFLICT          = 'conflict'
 
 # Codigos de error para CANCHAS
 ERROR_CODE_CANCHA_NOT_FOUND  = 'cancha.not.found'
