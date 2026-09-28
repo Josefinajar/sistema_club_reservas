@@ -48,6 +48,7 @@ sistema_club_reservas/
 │   │   └── socios_validator.py     # Validación de entrada para socios
 │   ├── services/
 │   │   ├── cancha_service.py       # Lógica de negocio de canchas
+│   │   ├── deporte_service.py      # Lógica de negocio de deportes
 │   │   ├── reserva_service.py      # Lógica de negocio de reservas
 │   │   └── socio_service.py        # Lógica de negocio de socios
 │   └── queries/
